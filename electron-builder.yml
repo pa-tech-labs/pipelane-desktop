@@ -1,0 +1,31 @@
+appId: com.patechlabs.pipelane
+productName: Pipelane
+asar: true
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+  - "!**/*.map"
+mac:
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  category: public.app-category.business
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  darkModeSupport: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+publish:
+  provider: github
+  owner: pa-tech-labs
+  repo: pipelane-desktop

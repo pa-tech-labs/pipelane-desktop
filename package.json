@@ -1,0 +1,40 @@
+{
+  "name": "pipelane-desktop",
+  "version": "0.1.0",
+  "description": "Pipelane desktop shell for macOS and Windows",
+  "main": "out/main/index.js",
+  "private": true,
+  "author": "PA Tech Labs",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "concurrently -k -n tsc,app -c blue,green \"tsc -w --preserveWatchOutput\" \"wait-on out/main/index.js && cross-env NODE_ENV=development electronmon .\"",
+    "start": "electron .",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "release": "npm run build && electron-builder --mac --win --publish always",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.9",
+    "node-machine-id": "^1.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.5",
+    "electronmon": "^2.0.3",
+    "typescript": "^5.5.4",
+    "wait-on": "^7.2.0"
+  },
+  "electronmon": {
+    "patterns": [
+      "out/**/*"
+    ],
+    "logLevel": "quiet"
+  }
+}
