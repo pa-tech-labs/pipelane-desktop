@@ -42,22 +42,17 @@ jobs:
       - name: Compile TypeScript
         run: npm run build
 
-      - name: Build, sign (if certs), and publish
+      # Code-signing env vars are intentionally omitted while waiting for Apple
+      # Developer Program certs. electron-builder treats an empty-string CSC_KEY_PASSWORD
+      # as a signing attempt and errors. When certs are available, re-add CSC_LINK /
+      # CSC_KEY_PASSWORD / APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
+      # (and WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD for Windows) here.
+      - name: Build and publish
         run: npm run release:mac
         env:
           # GITHUB_TOKEN is auto-provisioned per workflow run; electron-builder
           # reads GH_TOKEN as its convention.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Optional Mac signing — left unset until certs are configured.
-          # electron-builder skips signing when CSC_LINK is empty (logs a
-          # warning, doesn't error). Notarisation is also skipped when
-          # APPLE_ID is missing.
-          CSC_LINK:                    ${{ secrets.MAC_CERTIFICATE_BASE64 }}
-          CSC_KEY_PASSWORD:            ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-          APPLE_ID:                    ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID:               ${{ secrets.APPLE_TEAM_ID }}
 
   build-win:
     name: Build & publish (Windows)
@@ -78,12 +73,12 @@ jobs:
       - name: Compile TypeScript
         run: npm run build
 
-      - name: Build, sign (if cert), and publish
+      # Code-signing env vars are intentionally omitted while waiting for Apple
+      # Developer Program certs. electron-builder treats an empty-string CSC_KEY_PASSWORD
+      # as a signing attempt and errors. When certs are available, re-add CSC_LINK /
+      # CSC_KEY_PASSWORD / APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
+      # (and WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD for Windows) here.
+      - name: Build and publish
         run: npm run release:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Optional Windows signing — left unset until cert is configured.
-          # electron-builder skips signing cleanly when WIN_CSC_LINK is empty.
-          WIN_CSC_LINK:         ${{ secrets.WIN_CERTIFICATE_BASE64 }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
