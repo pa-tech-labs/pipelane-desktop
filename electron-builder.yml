@@ -17,10 +17,12 @@ mac:
   hardenedRuntime: true
   gatekeeperAssess: false
   darkModeSupport: true
+  artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 win:
   target:
     - target: nsis
       arch: [x64]
+  artifactName: ${productName}-Setup-${version}-${arch}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
@@ -29,3 +31,8 @@ publish:
   provider: github
   owner: pa-tech-labs
   repo: pipelane-desktop
+  # Uploads land in a *draft* release — review the auto-generated
+  # release notes on GitHub and click "Publish release" when ready.
+  # electron-updater only picks up published releases, so drafts act
+  # as a manual gate before users get auto-update prompts.
+  releaseType: draft

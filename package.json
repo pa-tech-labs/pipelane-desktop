@@ -13,6 +13,8 @@
     "start": "electron .",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
+    "release:mac": "electron-builder --mac --publish always",
+    "release:win": "electron-builder --win --publish always",
     "release": "npm run build && electron-builder --mac --win --publish always",
     "postinstall": "electron-builder install-app-deps"
   },

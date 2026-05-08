@@ -1,0 +1,89 @@
+# Release workflow — builds and publishes Mac DMG + Windows NSIS installers
+# to GitHub Releases when a v*.*.* tag is pushed. electron-builder reads the
+# version from package.json and the publish target from electron-builder.yml,
+# uploading artefacts directly to a draft release. Promote the release on
+# GitHub when ready — electron-updater clients only see "published" releases,
+# so drafts act as a manual gate before users get auto-update prompts.
+#
+# Code signing is intentionally optional in v1: when the CSC_LINK / WIN_CSC_LINK
+# secrets are unset, electron-builder logs a warning and ships an unsigned
+# build. Mac users will hit Gatekeeper, Windows users will hit SmartScreen —
+# see README "Code signing" section.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Default GITHUB_TOKEN permissions in newer repos are read-only. We need
+# `contents: write` so electron-builder can create / update releases.
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    name: Build & publish (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      - name: Build, sign (if certs), and publish
+        run: npm run release:mac
+        env:
+          # GITHUB_TOKEN is auto-provisioned per workflow run; electron-builder
+          # reads GH_TOKEN as its convention.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Optional Mac signing — left unset until certs are configured.
+          # electron-builder skips signing when CSC_LINK is empty (logs a
+          # warning, doesn't error). Notarisation is also skipped when
+          # APPLE_ID is missing.
+          CSC_LINK:                    ${{ secrets.MAC_CERTIFICATE_BASE64 }}
+          CSC_KEY_PASSWORD:            ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          APPLE_ID:                    ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID:               ${{ secrets.APPLE_TEAM_ID }}
+
+  build-win:
+    name: Build & publish (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      - name: Build, sign (if cert), and publish
+        run: npm run release:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Optional Windows signing — left unset until cert is configured.
+          # electron-builder skips signing cleanly when WIN_CSC_LINK is empty.
+          WIN_CSC_LINK:         ${{ secrets.WIN_CERTIFICATE_BASE64 }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}

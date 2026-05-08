@@ -41,22 +41,64 @@ This compiles TypeScript in watch mode and launches Electron with `electronmon`,
 npm run typecheck
 ```
 
-## Build local installers (unsigned)
+## Build local installers (unsigned, no publish)
 
 ```bash
-npm run dist:mac   # → dist/Pipelane-<version>.dmg + .zip (arm64 + x64)
-npm run dist:win   # → dist/Pipelane Setup <version>.exe
+npm run dist:mac   # → dist/Pipelane-<version>-mac-{arm64,x64}.{dmg,zip}
+npm run dist:win   # → dist/Pipelane-Setup-<version>-x64.exe
 ```
 
-Builds are unsigned for v1. Code signing for macOS (Developer ID + notarisation) and Windows (EV cert) is a follow-up — Gatekeeper / SmartScreen will warn on first launch until then.
+These produce installers in `dist/` but don't upload anything. Use them for smoke-testing a build locally.
 
-## Release (publishes to GitHub)
+## Releasing
+
+Releases are cut from a tag — pushing `v<semver>` triggers `.github/workflows/release.yml`, which builds Mac + Windows installers in parallel on macOS and Windows runners and uploads them to a **draft** GitHub Release.
+
+### Cutting a release
+
+```bash
+# On a clean main with the changes you want to ship:
+npm version patch          # bumps package.json + creates a v<x.y.z> tag
+git push --follow-tags origin main
+
+# Wait for the Actions run to complete (~10–15 min for both platforms).
+# Then on https://github.com/pa-tech-labs/pipelane-desktop/releases:
+#   - Review the auto-generated release notes
+#   - Edit if needed
+#   - Click "Publish release" to flip it from draft → published
+```
+
+`electron-updater` clients only pick up *published* releases, so the draft step is a manual gate before users get auto-update prompts.
+
+### Why drafts (not auto-published)
+
+Auto-publishing means a typo in a tag immediately ships to every installed copy. Drafts give you a chance to bin a botched build before users see it. Trade-off: every release costs one extra click.
+
+### Local releases (manual)
+
+If GitHub Actions is unavailable and you need to ship from a workstation:
 
 ```bash
 GH_TOKEN=<token-with-repo-write> npm run release
 ```
 
-This builds for macOS + Windows and publishes artefacts to a draft GitHub Release in `pa-tech-labs/pipelane-desktop`. The `electron-updater` clients in already-installed copies will pick it up once the draft is promoted to "Latest".
+This builds Mac + Windows from the same machine (Windows builds via electron-builder's cross-compilation may not work on Apple Silicon — prefer the CI path).
+
+## Code signing
+
+**v1 ships unsigned.** Until certs are configured, end users see OS-level warnings:
+
+- **macOS** — first launch fails with "Pipelane can't be opened because the developer cannot be verified." Workaround: right-click the app → **Open** → confirm in the dialog. Or System Settings → Privacy & Security → **Open Anyway** under the warning. After the first acceptance, future launches work normally.
+- **Windows** — SmartScreen blocks the installer with "Windows protected your PC." Workaround: click **More info** → **Run anyway**.
+
+These go away once signing is wired up. The release workflow is already plumbed for it — it just needs the secrets set on the GitHub repo:
+
+| Platform | Required secrets |
+|---|---|
+| macOS (sign + notarise) | `MAC_CERTIFICATE_BASE64`, `MAC_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` |
+| Windows (sign) | `WIN_CERTIFICATE_BASE64`, `WIN_CERTIFICATE_PASSWORD` |
+
+When all secrets in a row are set, that platform's installer ships signed. When they're missing, electron-builder logs a warning and ships unsigned — the workflow doesn't fail. Mac requires both an Apple Developer ID Application certificate *and* an Apple Developer account for notarisation; Windows works with an EV or OV code-signing cert.
 
 ## Project layout
 
