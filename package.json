@@ -16,6 +16,7 @@
     "release:mac": "electron-builder --mac --publish always",
     "release:win": "electron-builder --win --publish always",
     "release": "npm run build && electron-builder --mac --win --publish always",
+    "build:icons": "electron-icon-builder --input=./build/icon.png --output=./build --flatten",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "cross-env": "^7.0.3",
     "electron": "^32.0.0",
     "electron-builder": "^25.0.5",
+    "electron-icon-builder": "^2.0.1",
     "electronmon": "^2.0.3",
     "typescript": "^5.5.4",
     "wait-on": "^7.2.0"

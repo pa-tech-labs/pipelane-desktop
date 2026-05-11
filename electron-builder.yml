@@ -17,11 +17,13 @@ mac:
   hardenedRuntime: true
   gatekeeperAssess: false
   darkModeSupport: true
+  icon: build/icon.icns
   artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 win:
   target:
     - target: nsis
       arch: [x64]
+  icon: build/icon.ico
   artifactName: ${productName}-Setup-${version}-${arch}.${ext}
 nsis:
   oneClick: false
