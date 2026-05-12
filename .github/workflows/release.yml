@@ -42,17 +42,17 @@ jobs:
       - name: Compile TypeScript
         run: npm run build
 
-      # Code-signing env vars are intentionally omitted while waiting for Apple
-      # Developer Program certs. electron-builder treats an empty-string CSC_KEY_PASSWORD
-      # as a signing attempt and errors. When certs are available, re-add CSC_LINK /
-      # CSC_KEY_PASSWORD / APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
-      # (and WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD for Windows) here.
       - name: Build and publish
         run: npm run release:mac
         env:
           # GITHUB_TOKEN is auto-provisioned per workflow run; electron-builder
           # reads GH_TOKEN as its convention.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
   build-win:
     name: Build & publish (Windows)
@@ -73,11 +73,10 @@ jobs:
       - name: Compile TypeScript
         run: npm run build
 
-      # Code-signing env vars are intentionally omitted while waiting for Apple
-      # Developer Program certs. electron-builder treats an empty-string CSC_KEY_PASSWORD
-      # as a signing attempt and errors. When certs are available, re-add CSC_LINK /
-      # CSC_KEY_PASSWORD / APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
-      # (and WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD for Windows) here.
+      # Windows code signing pending — requires separate EV cert
+      # (Sectigo / DigiCert / SSL.com £200-600/yr). Re-add WIN_CSC_LINK /
+      # WIN_CSC_KEY_PASSWORD here when acquired. Mac signing is fully wired up
+      # in the build-mac job above.
       - name: Build and publish
         run: npm run release:win
         env:
